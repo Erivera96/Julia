@@ -39,34 +39,33 @@ function chk(A, row, col)
 	i = row # i & j is just
 	j = col # for reuseability
 	while i > 0 && j > 0 # i AND j decrease (basically: checking ALL of the major diagonal)
-			
+		
 		if A[i, j] == 1 # Just don't place if there's something there already. Just don't do it lol
 			return false
 		end
-
 		i -= 1
 		j -= 1
 	end
 
 	i = row # The actual act
 	j = col # of reusing :]
+	
 	while i > 0 # only decreasing i (checking all of the above, seriously only up)
 		
 		if A[i, j] == 1
 			return false
 		end
-
 		i -= 1
 	end
 
 	i = row
 	j = col
+	
 	while i > 0 && j <= size(A)[1] # decreasing i but INCREASING j (this checks the minor diagonal)
 			
 		if A[i, j] == 1
 			return false
 		end
-		
 		i -= 1
 		j += 1
 	end
