@@ -62,56 +62,6 @@ function LES(a::Float64, b::Float64, e::Float64, c::Float64, d::Float64, f:Float
 	return [x y]
 end
 
-##---------- Lagrange Polynomial Interpolation ----------##
-
-# given some number of (x, y) points, interpolate through the points
-# Takes: an array of x values and an array of y values
-function L(x::Array{Float64, 1}, y::Array{Float64, 1}) # UNFINISHED! #
-	
-	n = length(x) # number of points given
-	a = ones(n + 1) # degree of poly is n + 1 (at most)
-	l = [[]] # uhhh.. lagrange things? not there yet
-
-	# alternate-tively iterate through and slap on -1s
-	# this is how the lagrange pieces are structured
-	i = 2
-	for j = 1:n + 1
-		a[i] *= -1
-		i += 2
-		if(i > n + 1) break end
-	end
-
-	# meat of the code
-	for i = 1:(n - 1)
-		c = splice!(x, i) # take all but the current
-		# the following are general for all polynomials
-		# second term is the sum of all xs (except current)
-		# the last term is the constant (product of all xs)
-		a[2] = a[2]*reduce(+,x)
-		a[end] = a[end]*reduce(*,x)
-	
-		# this only applies when the polynomail is greater
-		# than degree 2. aka, given more than 3 points
-		if n > 3
-			tmp = []
-			q = combos(x,tmp,1,2) # combinations of coefficients in pairs
-			a[3] = a[3]*reduce(+,p) # standard 3rd term
-			
-			# loop from 4th term to last-1
-			for j = 4:n
-				for k = 1:(n - 1)
-					for l = (n+1):length(q)
-						a[j] = reduce(+,(x[k].*q[l:end]))
-						
-					end
-				end
-				print(a[j],"\n")
-			end
-		end
-		append!([c],x) # add back the current
-	end
-end
-
 ##---------- Combinations ----------##
 
 # recursively creates all the combinations of the elements of x
@@ -194,26 +144,6 @@ function maxdex(x::Array{Float64, 1}, f::Function)
 	return [max; dex]
 end
 
-##---------- Making life easier 1.0 ----------##
-
-function Do(f::Function, P::Function, x::Array{Float64, 1}, xi::Function, a::Int64, b::Int64, g::Function, dg::Function)
-	
-	# finding abs err of lagrange poly
-	print("f(x) = ", f(x), "\nP(x) = ", P(x),"\nAbs Err = ", abs(f(x) - P(x)))
-	
-	# finding err bounds of lagrange poly
-	m = mindex(a, b, xi)
-	M = maxdex(a, b, xi)
-	print("\nMIN xi(x) = ", m[1]," at x = ", m[2], "\nMAX xi(x) = ", M[1], " at x = ",M[2])
-
-	r = roots(Poly(dg))
-	Gm = mindex(r, g)
-	GM = maxdex(r, g)
-	print("\nMIN g(r) = ", Gm[1], "\n\tfor g'(x) root: ", Gm[2], "\nMAX g(r) = ", GM[1], "\n\tfor g'(x) root: ", GM[2])
-	
-	print("\nErr Bounds: [", m[1]*Gm[1], ", ", M[1]*GM[1], "]")
-end
-
 ##---------- Euler's Method ----------##
 
 function eulr(dy::Function, t::Array{Float64, 1}, y0::Float64, y_eulr::Array{Float64, 1})
@@ -263,45 +193,6 @@ function rk4(dy::Function, t::Array{Float64, 1}, y0::Float64, y_rk4::Array{Float
 	end
 
 	return y_rk4
-end
-
-##---------- Making Life Easier 2.0 ----------##
-
-function Do(dy::Function, t0::Float64, tn::Float64, y0::Float64, h::Float64, tru::Function)
-	
-	# construct your time span
-	t = collect(t0:h:tn)
-	
-	# allocate memory for your calculations
-	y_eulr = zeros(Float64, length(t))
-	y_mid = zeros(Float64, length(t))
-	y_rk4 = zeros(Float64, length(t))
-	
-	# compute the actual solution and the approximations
-	y_tru = tru.(t)
-	y_eulr = eulr(dy, t, y0, y_eulr)
-	y_mid = midpoint(dy, t, y0, y_mid)
-	y_rk4 = rk4(dy, t, y0, y_rk4)
-	
-	# plot the actual and approximated solutions
-	p0 = plot(t, [y_tru y_eulr y_mid y_rk4], title = "1a", label = ["y_tru" "y_eulr" "y_mid" "y_rk4"]);
-	p1 = plot(t, y_tru); p2 = plot(t, y_eulr); p3 = plot(t, y_mid); p4 = plot(t, y_rk4);
-	p5 = plot(p1, p2, p3, p4, label = ["y_tru" "y_eulr" "y_mid" "y_rk4"]);
-	
-	# compute the error between the approximations and the actual solution
-	err_eulr = abs.(y_tru - y_eulr)
-	err_mid = abs.(y_tru - y_mid)
-	err_rk4 = abs.(y_tru - y_rk4)
-	
-	# plot the error
-	p6 = plot(t, [err_eulr err_mid err_rk4], title = "3a", label = ["eulr" "mid" "rk4"]);
-	
-	savefig(p0,"fig1ai.png")
-	savefig(p5,"fig1aii.png")
-	savefig(p6,"fig3a.png")
-	
-	return ["t" "y_tru" "y_eulr" "err_eulr" "y_mid" "err_mid" "y_rk4" "err_rk4";
-		t y_tru y_eulr err_eulr y_mid err_mid y_rk4 err_rk4]
 end
 
 ##---------- System of ODEs Runge-Kutta ----------##
